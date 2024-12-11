@@ -21,7 +21,6 @@ def randomGrid(N):
 
 def update(frameNum, img, grid, N, payoffs, hyp, axr):
 
-    count = 0
     # kopier grid
     # udregninger sker linje for linje
     newGrid = grid.copy()
@@ -29,11 +28,10 @@ def update(frameNum, img, grid, N, payoffs, hyp, axr):
         for j in range(N):
 
             # for hver celle: udvælg tilfældig nabo -> sammenlign strat -> udregn payoff -> udregn reproductive succes
-            rng = random.randint(0,7)
-            choice = grid[[-1,-1],[-1,0],[-1,1],
-                          [0,-1],[0,1],
-                          [1,-1],[1,0],[1,1]][rng]
-            
+            choice = [grid[(i-1)%N,(j-1)%N],grid[(i-1)%N,j],grid[(i-1)%N,(j+1)%N],
+                      grid[i,(j-1)%N],grid[i,(j+1)%N],
+                      grid[(i+1)%N,(j-1)%N],grid[(i+1)%N,j],grid[(i+1)%N,(j+1)%N]][random.randint(0,7)]
+
             if grid[i,j] == COOP:
                 if choice == COOP:  # COOP: R - COOP: R
                     px, py = 1, 1
@@ -45,11 +43,18 @@ def update(frameNum, img, grid, N, payoffs, hyp, axr):
                 else:               # DEF: P - DEF: P
                     px, py = 0, 0
             
+            # print(f'choices - x:{grid[i,j]}-{px}, y:{choice}-{py}. fitness: {(py - px)}, rng: {reproduceRng}')
+            if random.random() > (py - px)/2:
+                newGrid[i,j] = choice
+            # else:
+            #     newGrid[i,j] = grid[i,j]
             
+    count = np.count_nonzero(newGrid == COOP)/(N*N)
     
     # opdater data
     img.set_data(newGrid)
     grid[:] = newGrid[:]
+
 
     hypx.append(frameNum)
     hypy.append(count)
@@ -60,7 +65,7 @@ def update(frameNum, img, grid, N, payoffs, hyp, axr):
         axr.texts[0].remove()
     if isinstance(axr.get_children()[1], LineCollection):
         axr.get_children()[1].remove()
-    plt.text(0, count+20, f"count: {count}", fontsize=10)
+    # plt.text(0, count+20, f"count: {count}", fontsize=10)
 
     hyp.set_data(hypx, hypy)
     axr.hlines(y=count, xmin=0, xmax=frameNum)
@@ -84,12 +89,12 @@ def main():
     args = parser.parse_args() 
 
     # sæt cost-benefit
-    r = 0.62
     if args.r and float(args.r) > 0 and float(args.r) < 1:
         b,c = float(args.r) + 1, 2 * float(args.r)
 
         # R=1, T, S, P=0
         payoffs = [b, b-c]
+        print(f'r={args.r}; b={b}, c={c}; T={payoffs[0]}, R=1, S={payoffs[1]}, P=0')
 
     # sæt grid-størrelse
     N = 100
@@ -113,8 +118,9 @@ def main():
         nrows=2,
     )
 
-    img = axl.imshow(grid, interpolation='nearest')
+    img = axl.imshow(grid, cmap='cool', interpolation='nearest')
     hyp, = axr.plot(0,0)
+    plt.title(f'r={args.r}; b={b}, c={c}; T={payoffs[0]}, R=1, S={payoffs[1]}, P=0')
 
     ani = animation.FuncAnimation(fig, update, fargs=(img, grid, N, payoffs, hyp, axr,), 
                                   interval=updateInterval, 
