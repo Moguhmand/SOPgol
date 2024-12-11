@@ -4,6 +4,7 @@ import matplotlib.pyplot as plt
 import matplotlib.animation as animation
 import random
 from matplotlib.collections import LineCollection
+from matplotlib import colormaps
 
 # setup values
 COOP = 255
@@ -118,7 +119,14 @@ def main():
         nrows=2,
     )
 
-    img = axl.imshow(grid, cmap='cool', interpolation='nearest')
+    cmap = colormaps['cool']
+    for count, entry in enumerate(vals):
+        print(count, entry)
+        clr = cmap(entry)
+        axl.plot(0,0,'s',color=clr, label=['COOPERATOR','DEFECTOR'][count])
+    
+    axl.legend('upper right')
+    img = axl.imshow(grid, cmap=cmap, interpolation='nearest')
     hyp, = axr.plot(0,0)
     plt.title(f'r={args.r}; b={b}, c={c}; T={payoffs[0]}, R=1, S={payoffs[1]}, P=0')
 
