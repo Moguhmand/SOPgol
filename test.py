@@ -213,14 +213,15 @@ def main():
     imgPay = axPay.imshow(startPay, cmap='coolwarm', interpolation='nearest')
     plt.colorbar(imgPay, ax=axPay)
 
-    hypCoop, = axHyp.plot(0,0)
-    hypDef, = axHyp.plot(0,0)
+    hypCoop, = axHyp.plot(0,0, label='COOP')
+    hypDef, = axHyp.plot(0,0, label='DEFECTOR')
     axSnow.legend(loc='upper right')
 
     plt.suptitle(f'Snowdrift spil simulering\nr={args.r}; b={b}, c={c}; T={payoffs[0]}, R=1, S={payoffs[1]}, P=0')
     axSnow.set_title('Snowdrift gitter')
     axPay.set_title('Payoff gitter')
     axHyp.set_title('Andel af kooperatører over tid')
+    axHyp.legend()
     fig.canvas.manager.full_screen_toggle()
 
     ani = animation.FuncAnimation(fig, update, fargs=(img, imgPay, grid, N, payoffs, hypCoop, hypDef, axHyp,), 
