@@ -15,14 +15,15 @@ vals = [COOP, DEFECTOR, DEAD]
 
 
 hypx = []
-hypy = []
+hypCoopy = []
+hypDefy = []
 hline = []
 
 def randomGrid(N):
     # returnerer et tilfældigt N*N grid
-    return np.random.choice(vals, N*N, p=[0.2, 0.2, 0.6]).reshape(N, N)
+    return np.random.choice(vals, N*N, p=[0.02, 0.02, 0.96]).reshape(N, N)
 
-def update(frameNum, img, imgPay, grid, N, payoffs, hyp, axHyp):
+def update(frameNum, img, imgPay, grid, N, payoffs, hypCoop, hypDef, axHyp):
 
     # kopier grid
     # udregninger sker linje for linje
@@ -116,14 +117,19 @@ def update(frameNum, img, imgPay, grid, N, payoffs, hyp, axHyp):
 
                 # success baseret på en logistisk kurve (sigmoid kurve), hvis uafhængige variabel er differencen i fitness (payoff)
                 difPay = pGrid[choice[0],choice[1]] - pGrid[i,j]
-                sigmoid = 1 / (1 + math.exp(-1))
+                sigmoid = 1 / (1 + math.exp(-(payoffs[0] - 1) * difPay))
 
-                if random.random() > sigmoid:
+                # print('payoff ', pGrid[choice[0],choice[1]], ' || ', pGrid[i,j])
+                # print('dif, sig ', difPay, ' || ', sigmoid)
+
+                if sigmoid > random.random():
                     newGrid[i,j] = grid[choice[0], choice[1]]
 
     
-    count = np.count_nonzero(newGrid == COOP)/(N*N)
+    coopCount = np.count_nonzero(newGrid == COOP)/(N*N)
+    defCount = np.count_nonzero(newGrid == DEFECTOR)/(N*N)
     
+        
     # opdater data
     img.set_data(newGrid)
     grid[:] = newGrid[:]
@@ -131,20 +137,25 @@ def update(frameNum, img, imgPay, grid, N, payoffs, hyp, axHyp):
     imgPay.set_data(pGrid)
 
     hypx.append(frameNum)
-    hypy.append(count)
+    hypCoopy.append(coopCount)
+    hypDefy.append(defCount)
     plt.xlim([-1, frameNum])
-    plt.ylim([0, max(hypy)])
+    plt.ylim([0, max(hypCoopy)])
 
     if axHyp.texts:
         axHyp.texts[0].remove()
-    if isinstance(axHyp.get_children()[1], LineCollection):
-        axHyp.get_children()[1].remove()
-    plt.text(0, count+20, f"count: {count}", fontsize=10)
 
-    hyp.set_data(hypx, hypy)
-    axHyp.hlines(y=count, xmin=0, xmax=frameNum)
+    # print(axHyp.get_children())
+    if isinstance(axHyp.get_children()[2], LineCollection):
+        axHyp.get_children()[2].remove()
+    plt.text(0, coopCount+20, f"coopCount: {coopCount}", fontsize=10)
 
-    return img, imgPay, hyp,
+    hypCoop.set_data(hypx, hypCoopy)
+    hypDef.set_data(hypx, hypDefy)
+
+    axHyp.hlines(y=coopCount, xmin=0, xmax=frameNum)
+
+    return img, imgPay, hypCoop, hypDef,
 
 
 # main() funktion
@@ -191,10 +202,10 @@ def main():
     fig, ((axSnow, axPay), (axHyp, empty)) = plt.subplots(2,2)
 
     cmap = colormaps['viridis']
-    for count, entry in enumerate(vals):
+    for coopCount, entry in enumerate(vals):
         clr = cmap(entry)
         print(clr)
-        axSnow.plot(0,0,'-',color=clr, label=['COOP','DEFECTOR','DEAD'][count])    
+        axSnow.plot(0,0,'-',color=clr, label=['COOP','DEFECTOR','DEAD'][coopCount])    
 
     img = axSnow.imshow(grid, cmap=cmap, interpolation='nearest')
     startPay = np.zeros((N,N))
@@ -202,7 +213,8 @@ def main():
     imgPay = axPay.imshow(startPay, cmap='coolwarm', interpolation='nearest')
     plt.colorbar(imgPay, ax=axPay)
 
-    hyp, = axHyp.plot(0,0)
+    hypCoop, = axHyp.plot(0,0)
+    hypDef, = axHyp.plot(0,0)
     axSnow.legend(loc='upper right')
 
     plt.suptitle(f'Snowdrift spil simulering\nr={args.r}; b={b}, c={c}; T={payoffs[0]}, R=1, S={payoffs[1]}, P=0')
@@ -211,7 +223,7 @@ def main():
     axHyp.set_title('Andel af kooperatører over tid')
     fig.canvas.manager.full_screen_toggle()
 
-    ani = animation.FuncAnimation(fig, update, fargs=(img, imgPay, grid, N, payoffs, hyp, axHyp,), 
+    ani = animation.FuncAnimation(fig, update, fargs=(img, imgPay, grid, N, payoffs, hypCoop, hypDef, axHyp,), 
                                   interval=updateInterval, 
                                   save_count=500)
 
