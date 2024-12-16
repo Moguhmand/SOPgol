@@ -5,6 +5,7 @@ import matplotlib.animation as animation
 from matplotlib import colormaps
 import random
 from matplotlib.collections import LineCollection
+import math
 
 # setup values
 COOP = 255
@@ -21,7 +22,7 @@ def randomGrid(N):
     # returnerer et tilfældigt N*N grid
     return np.random.choice(vals, N*N, p=[0.2, 0.2, 0.6]).reshape(N, N)
 
-def update(frameNum, img, grid, N, payoffs, hyp, axr):
+def update(frameNum, img, imgPay, grid, N, payoffs, hyp, axHyp):
 
     # kopier grid
     # udregninger sker linje for linje
@@ -98,16 +99,26 @@ def update(frameNum, img, grid, N, payoffs, hyp, axr):
 
             # find idekser på alle naboer eksl. naboer med nul payoff. 
             pIndexes = [k for k in neighbourIndex if pGrid[k[0],k[1]] != 0]
+            # print(pIndexes)
 
             # hvis ingen naboer med payoff
             if len(pIndexes) == 0:
                 newGrid[i,j] = DEAD
             else:
                 # udtræk tilfældig nabo
-                choice = pIndexes[random.randint(0, len(pIndexes)-1)]
+                # choice = pIndexes[random.randint(0, len(pIndexes)-1)]
+
+                choice = random.choices(pIndexes, weights=(float(pGrid[k[0],k[1]]) for k in pIndexes), k=1)[0]
 
                 # hvis random er større end normaliseret payoff (py-px)/2 -> ny celle = udvalgt nabo
-                if random.random() > (pGrid[choice[0],choice[1]] - pGrid[i,j])/2:
+                # print('ps',pGrid[choice[0],choice[1]], pGrid[i,j])
+                # print('success', (pGrid[choice[0],choice[1]] - pGrid[i,j])/2)
+
+                # success baseret på en logistisk kurve (sigmoid kurve), hvis uafhængige variabel er differencen i fitness (payoff)
+                difPay = pGrid[choice[0],choice[1]] - pGrid[i,j]
+                sigmoid = 1 / (1 + math.exp(-1))
+
+                if random.random() > sigmoid:
                     newGrid[i,j] = grid[choice[0], choice[1]]
 
     
@@ -117,22 +128,23 @@ def update(frameNum, img, grid, N, payoffs, hyp, axr):
     img.set_data(newGrid)
     grid[:] = newGrid[:]
 
+    imgPay.set_data(pGrid)
 
     hypx.append(frameNum)
     hypy.append(count)
     plt.xlim([-1, frameNum])
     plt.ylim([0, max(hypy)])
 
-    if axr.texts:
-        axr.texts[0].remove()
-    if isinstance(axr.get_children()[1], LineCollection):
-        axr.get_children()[1].remove()
+    if axHyp.texts:
+        axHyp.texts[0].remove()
+    if isinstance(axHyp.get_children()[1], LineCollection):
+        axHyp.get_children()[1].remove()
     plt.text(0, count+20, f"count: {count}", fontsize=10)
 
     hyp.set_data(hypx, hypy)
-    axr.hlines(y=count, xmin=0, xmax=frameNum)
+    axHyp.hlines(y=count, xmin=0, xmax=frameNum)
 
-    return img, hyp,
+    return img, imgPay, hyp,
 
 
 # main() funktion
@@ -176,22 +188,24 @@ def main():
     
 
     # sæt animationen op
-    fig, (axl, axr) = plt.subplots(
-        nrows=2,
-    )
+    fig, ((axSnow, axPay), (axHyp, empty)) = plt.subplots(2,2)
 
     cmap = colormaps['viridis']
     for count, entry in enumerate(vals):
         clr = cmap(entry)
         print(clr)
-        axl.plot(0,0,'-',color=clr, label=['COOP','DEFECTOR','DEAD'][count])    
+        axSnow.plot(0,0,'-',color=clr, label=['COOP','DEFECTOR','DEAD'][count])    
 
-    img = axl.imshow(grid, cmap=cmap, interpolation='nearest')
-    hyp, = axr.plot(0,0)
+    img = axSnow.imshow(grid, cmap=cmap, interpolation='nearest')
+    startPay = np.zeros((N,N))
+    startPay[0,0] = payoffs[0]*8
+    imgPay = axPay.imshow(startPay, cmap='coolwarm', interpolation='nearest')
+
+    hyp, = axHyp.plot(0,0)
     plt.title(f'r={args.r}; b={b}, c={c}; T={payoffs[0]}, R=1, S={payoffs[1]}, P=0')
-    axl.legend(loc='upper right')
+    axSnow.legend(loc='upper right')
 
-    ani = animation.FuncAnimation(fig, update, fargs=(img, grid, N, payoffs, hyp, axr,), 
+    ani = animation.FuncAnimation(fig, update, fargs=(img, imgPay, grid, N, payoffs, hyp, axHyp,), 
                                   interval=updateInterval, 
                                   save_count=500)
 
