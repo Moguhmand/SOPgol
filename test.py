@@ -200,9 +200,10 @@ def main():
     startPay = np.zeros((N,N))
     startPay[0,0] = payoffs[0]*8
     imgPay = axPay.imshow(startPay, cmap='coolwarm', interpolation='nearest')
+    plt.colorbar(imgPay, ax=axPay)
 
     hyp, = axHyp.plot(0,0)
-    plt.title(f'r={args.r}; b={b}, c={c}; T={payoffs[0]}, R=1, S={payoffs[1]}, P=0')
+    plt.suptitle(f'Snowdrift spil simulering\nr={args.r}; b={b}, c={c}; T={payoffs[0]}, R=1, S={payoffs[1]}, P=0')
     axSnow.legend(loc='upper right')
 
     ani = animation.FuncAnimation(fig, update, fargs=(img, imgPay, grid, N, payoffs, hyp, axHyp,), 
