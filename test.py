@@ -13,7 +13,6 @@ DEFECTOR = 128
 DEAD = 0
 vals = [COOP, DEFECTOR, DEAD]
 
-
 hypx = []
 hypCoopy = []
 hypDefy = []
@@ -110,10 +109,6 @@ def update(frameNum, img, imgPay, grid, N, payoffs, hypCoop, hypDef, axHyp):
                 # choice = pIndexes[random.randint(0, len(pIndexes)-1)]
 
                 choice = random.choices(pIndexes, weights=(float(pGrid[k[0],k[1]]) for k in pIndexes), k=1)[0]
-
-                # hvis random er større end normaliseret payoff (py-px)/2 -> ny celle = udvalgt nabo
-                # print('ps',pGrid[choice[0],choice[1]], pGrid[i,j])
-                # print('success', (pGrid[choice[0],choice[1]] - pGrid[i,j])/2)
 
                 # success baseret på en logistisk kurve (sigmoid kurve), hvis uafhængige variabel er differencen i fitness (payoff)
                 difPay = pGrid[choice[0],choice[1]] - pGrid[i,j]
