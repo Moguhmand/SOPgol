@@ -16,13 +16,13 @@ vals = [COOP, DEFECTOR, DEAD]
 hypx = []
 hypCoopy = []
 hypDefy = []
-hline = []
+hypDeady=[]
 
 def randomGrid(N):
     # returnerer et tilfældigt N*N grid
     return np.random.choice(vals, N*N, p=[0.02, 0.02, 0.96]).reshape(N, N)
 
-def update(frameNum, img, imgPay, grid, N, payoffs, hypCoop, hypDef, axHyp):
+def update(frameNum, img, imgPay, grid, N, payoffs, hypCoop, hypDef, hypDead, axHyp):
 
     # kopier grid
     # udregninger sker linje for linje
@@ -123,7 +123,7 @@ def update(frameNum, img, imgPay, grid, N, payoffs, hypCoop, hypDef, axHyp):
     
     coopCount = np.count_nonzero(newGrid == COOP)/(N*N)
     defCount = np.count_nonzero(newGrid == DEFECTOR)/(N*N)
-    
+    deadCount = 1 - coopCount - defCount
         
     # opdater data
     img.set_data(newGrid)
@@ -134,21 +134,22 @@ def update(frameNum, img, imgPay, grid, N, payoffs, hypCoop, hypDef, axHyp):
     hypx.append(frameNum)
     hypCoopy.append(coopCount)
     hypDefy.append(defCount)
-    plt.xlim([-1, frameNum])
-    plt.ylim([0, max(hypCoopy)])
+    hypDeady.append(deadCount)
+    axHyp.set_xlim([-1, frameNum])
 
     if axHyp.texts:
         axHyp.texts[0].remove()
 
     # print(axHyp.get_children())
-    if isinstance(axHyp.get_children()[2], LineCollection):
-        axHyp.get_children()[2].remove()
+    # if isinstance(axHyp.get_children()[2], LineCollection):
+    #     axHyp.get_children()[2].remove()
     plt.text(0, coopCount+20, f"coopCount: {coopCount}", fontsize=10)
 
     hypCoop.set_data(hypx, hypCoopy)
     hypDef.set_data(hypx, hypDefy)
+    hypDead.set_data(hypx, hypDeady)
 
-    axHyp.hlines(y=coopCount, xmin=0, xmax=frameNum)
+    # axHyp.hlines(y=coopCount, xmin=0, xmax=frameNum)
 
     return img, imgPay, hypCoop, hypDef,
 
@@ -200,26 +201,35 @@ def main():
     for coopCount, entry in enumerate(vals):
         clr = cmap(entry)
         print(clr)
-        axSnow.plot(0,0,'-',color=clr, label=['COOP','DEFECTOR','DEAD'][coopCount])    
+        axSnow.plot(0,0,'-',color=clr, label=['KOOPERATIV','SVINDLER','DØD'][coopCount])    
 
     img = axSnow.imshow(grid, cmap=cmap, interpolation='nearest')
     startPay = np.zeros((N,N))
     startPay[0,0] = payoffs[0]*8
     imgPay = axPay.imshow(startPay, cmap='coolwarm', interpolation='nearest')
-    plt.colorbar(imgPay, ax=axPay)
+    cbar = plt.colorbar(imgPay, ax=axPay)
+    cbar.set_label('Udbytte')
 
-    hypCoop, = axHyp.plot(0,0, label='COOP')
-    hypDef, = axHyp.plot(0,0, label='DEFECTOR')
-    axSnow.legend(loc='upper right')
+    hypCoop, = axHyp.plot(0,0, label='KOOPERATIV')
+    hypDef, = axHyp.plot(0,0, label='SVINDLER')
+    hypDead, = axHyp.plot(0,0, label='DØD')
+    axSnow.legend(loc='upper right', bbox_to_anchor=(1.32,1.015))
+    # axSnow.legend(bbox_to_anchor=(1.05, 1), loc=2)
 
-    plt.suptitle(f'Snowdrift spil simulering\nr={args.r}; b={b}, c={c}; T={payoffs[0]}, R=1, S={payoffs[1]}, P=0')
+    plt.suptitle(f'Rumligt struktureret snowdrift spil simulering\nr={args.r}; b={b}, c={c}; T={payoffs[0]}, R=1, S={payoffs[1]}, P=0')
     axSnow.set_title('Snowdrift gitter')
-    axPay.set_title('Payoff gitter')
+    axPay.set_title('Udbytte gitter')
     axHyp.set_title('Andel af kooperatører over tid')
     axHyp.legend()
+    axHyp.set_ylim(0,1)
+    axHyp.yaxis.tick_right()
+
+    axHyp.set_xlabel('Framenumber/Generation')
+    axHyp.set_ylabel('Andel af population')
+
     fig.canvas.manager.full_screen_toggle()
 
-    ani = animation.FuncAnimation(fig, update, fargs=(img, imgPay, grid, N, payoffs, hypCoop, hypDef, axHyp,), 
+    ani = animation.FuncAnimation(fig, update, fargs=(img, imgPay, grid, N, payoffs, hypCoop, hypDef, hypDead, axHyp,), 
                                   interval=updateInterval, 
                                   save_count=500)
 
