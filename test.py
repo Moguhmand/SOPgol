@@ -137,7 +137,7 @@ def update(frameNum, img, imgPay, grid, N, payoffs, hypCoop, hypDef, hypDead, ax
     hypDeady.append(deadCount)
     axHyp.set_xlim([-1, frameNum])
 
-    print(axHyp.texts)
+    #print(axHyp.texts)
     for t in axHyp.texts:
         t.remove()
 
