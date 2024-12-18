@@ -137,13 +137,18 @@ def update(frameNum, img, imgPay, grid, N, payoffs, hypCoop, hypDef, hypDead, ax
     hypDeady.append(deadCount)
     axHyp.set_xlim([-1, frameNum])
 
-    if axHyp.texts:
-        axHyp.texts[0].remove()
+    print(axHyp.texts)
+    for t in axHyp.texts:
+        t.remove()
+
+    axHyp.text(frameNum*0.8, coopCount+0.05,f'Stabil andel: {sum(hypCoopy[-500:])/500}', fontsize=10)
+    axHyp.text(frameNum*0.8, defCount+0.05,f'Stabil andel: {sum(hypDefy[-500:])/500}', fontsize=10)
+
 
     # print(axHyp.get_children())
     # if isinstance(axHyp.get_children()[2], LineCollection):
     #     axHyp.get_children()[2].remove()
-    plt.text(0, coopCount+20, f"coopCount: {coopCount}", fontsize=10)
+    # plt.text(0, coopCount+20, f"coopCount: {coopCount}", fontsize=10)
 
     hypCoop.set_data(hypx, hypCoopy)
     hypDef.set_data(hypx, hypDefy)
