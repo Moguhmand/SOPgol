@@ -20,7 +20,7 @@ hypDeady=[]
 
 def randomGrid(N):
     # returnerer et tilfældigt N*N grid
-    return np.random.choice(vals, N*N, p=[0.02, 0.02, 0.96]).reshape(N, N)
+    return np.random.choice(vals, N*N, p=[0.2, 0.2, 0.6]).reshape(N, N)
 
 def update(frameNum, img, imgPay, grid, N, payoffs, hypCoop, hypDef, hypDead, axHyp):
 
@@ -45,6 +45,8 @@ def update(frameNum, img, imgPay, grid, N, payoffs, hypCoop, hypDef, hypDead, ax
             naboer = [grid[(i-1)%N,(j-1)%N],grid[(i-1)%N,j],grid[(i-1)%N,(j+1)%N],
                       grid[i,(j-1)%N],grid[i,(j+1)%N],
                       grid[(i+1)%N,(j-1)%N],grid[(i+1)%N,j],grid[(i+1)%N,(j+1)%N]]
+            
+            #naboer = [grid[(i-1)%N,j],grid[i,(j-1)%N],grid[i,(j+1)%N],grid[(i+1)%N,j]]
 
             # udregn payoff sum
             if grid[i,j] == COOP:
@@ -96,6 +98,7 @@ def update(frameNum, img, imgPay, grid, N, payoffs, hypCoop, hypDef, hypDead, ax
             neighbourIndex = [[(i-1)%N,(j-1)%N],[(i-1)%N,j],[(i-1)%N,(j+1)%N],
                               [i,(j-1)%N],[i,(j+1)%N],
                               [(i+1)%N,(j-1)%N],[(i+1)%N,j],[(i+1)%N,(j+1)%N]]
+            # neighbourIndex = [[(i-1)%N,j],[i,(j-1)%N],[i,(j+1)%N],[(i+1)%N,j]]
 
             # find idekser på alle naboer eksl. naboer med nul payoff. 
             pIndexes = [k for k in neighbourIndex if pGrid[k[0],k[1]] != 0]
